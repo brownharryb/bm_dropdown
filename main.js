@@ -3,12 +3,25 @@ $(document).ready(function(){
 });
 
 function enableSelectDropDown(){
+	addSelectToDiv();
 	enable_dropdown_appear();
 	enable_input_change();
 	enable_input_key_press();
 	enable_dropdown_disappear();
 
 	
+}
+
+function addSelectToDiv(){
+	$('select').each(function(){
+		var $div_el = "<div style='display:inlne-block' class='select_input'><input type='text' name=''><ul class='select_input_master'></ul></div>";
+		$(this).after($div_el);
+	});
+	$('.select_input').each(function(){
+		var $sel_el = $(this).prev('select');
+		$sel_el.css('display','none');
+		$(this).append($sel_el);
+	});
 }
 
 function setFocusOn_($li_el){
@@ -41,6 +54,8 @@ function enable_input_key_press(){
 		if(e.keyCode==13){
 			var $selected_li = $(this).parent().find('.select_input_li_focused');
 			if($selected_li.length>0){
+				var index_num = $selected_li.data('index_num');
+				$selected_li.parent().parent().find('select').prop('selectedIndex',index_num);
 				$(this).val($selected_li.text());
 				disappearDropdown($(this));
 			}
@@ -69,8 +84,10 @@ function enable_input_change(){
 		$val = $.trim($val);
 
 		var $select_input_dropdrown_ul_master = $(this).parent().find('.select_input_master');
-		var $select_input_dropdrown_ul_slave = $(this).parent().find('.select_input_slave');
-		var $select_input_dropdrown_li = $select_input_dropdrown_ul_slave.find('li').clone();
+		var $select_input_dropdrown_ul_slave = $(this).parent().find('select');
+		var $select_input_dropdrown_li = $select_input_dropdrown_ul_slave.find('option').clone();
+
+		$select_input_dropdrown_li = convertOptionElsToListEls($select_input_dropdrown_li);
 
 		
 		if($val != ""){			
@@ -92,9 +109,12 @@ function enable_list_select($ul_el){
 	var $select_input_li = $ul_el.find('li');
 	$select_input_li.each(function(){
 		$(this).click(function(){
+			var index_num = $(this).data('index_num');
 			var $input_el = $(this).parent().parent().find("input[type='text']");
 			$input_el.val($(this).text());
-			disappearDropdown($input_el);			
+			disappearDropdown($input_el);
+			
+			$(this).parent().parent().find('select').prop('selectedIndex',index_num);
 		});
 
 		$(this).hover(function(){
@@ -127,8 +147,14 @@ function enable_dropdown_disappear(){
 function appearDropdown($input_el){
 	$input_el.css({'border-bottom':'none'});
 	var $select_input_dropdrown_ul_master = $input_el.parent().find('.select_input_master');
-	var $select_input_dropdrown_ul_slave = $input_el.parent().find('.select_input_slave');
-	$select_input_dropdrown_ul_master.html($select_input_dropdrown_ul_slave.find('li').clone());
+	var $select_input_dropdrown_ul_slave = $input_el.parent().find('select');
+	var $select_input_dropdrown_li = $select_input_dropdrown_ul_slave.find('option').clone();
+
+	
+
+	$select_input_dropdrown_li = convertOptionElsToListEls($select_input_dropdrown_li);
+	$select_input_dropdrown_ul_master.html($select_input_dropdrown_li);
+
 	$select_input_dropdrown_ul_master.fadeIn(200);
 	enable_list_select($select_input_dropdrown_ul_master);
 }
@@ -138,4 +164,12 @@ function disappearDropdown($input_el){
 	$input_el.css({'border-bottom':'1px solid rgba(23,34,65,0.3)'});
 }
 
+function convertOptionElsToListEls($optionEls){
+	var returnVal = '';
+	$optionEls.each(function(){
+		var index_num = $optionEls.index($(this));
+		returnVal+="<li data-index_num='"+index_num+"'>"+$(this).html().toString()+"</li>"
+	});
+	return $(returnVal);
+}
 
